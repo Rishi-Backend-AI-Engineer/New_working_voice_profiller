@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Voice Risk Profiler</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🎙️ Voice Risk Profiler</h1>
+
+    <section class="card">
+      <h2>Upload Your Voice</h2>
+      <form id="uploadForm" enctype="multipart/form-data">
+        <input type="text" id="uploadFilenameInput" placeholder="Enter file name (without extension)" required style="margin-bottom: 10px; padding: 5px; width: 200px;" />
+        <input type="file" id="voiceFile" name="voice" accept="audio/*" required />
+        <button type="submit">Upload</button>
+        <p id="uploadStatusMessage" class="success"></p>
+        <p id="uploadErrorMessage" class="error"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Or Record Live</h2>
+      <input type="text" id="recordFilenameInput" placeholder="Enter file name (without extension)" required style="margin-bottom: 10px; padding: 5px; width: 200px;" />
+      <div class="buttons">
+        <button id="startBtn">🎤 Start Recording</button>
+        <button id="stopBtn" disabled>⏹️ Stop & Upload</button>
+      </div>
+      <audio id="player" controls></audio>
+      <p id="recordStatusMessage" class="success"></p>
+      <p id="recordErrorMessage" class="error"></p>
+    </section>
+
+    <section class="card">
+      <h2>Available Files</h2>
+      <select id="fileSelect"></select>
+      <button id="extractBtn">Extract Features</button>
+
+      <h3>Extracted Features</h3>
+      <pre id="featuresOutput"></pre>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

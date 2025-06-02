@@ -1,0 +1,76 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f7fa;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+.container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 25px 20px;
+  margin-bottom: 30px;
+}
+
+.card h2 {
+  margin-top: 0;
+  color: #34495e;
+}
+
+input[type="file"] {
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 10px 18px;
+  margin: 5px;
+  background-color: #2980b9;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background-color: #1c5980;
+}
+
+audio {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.success {
+  color: green;
+  font-size: 14px;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+}
+
+.buttons {
+  margin-top: 10px;
+}
