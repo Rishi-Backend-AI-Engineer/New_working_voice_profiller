@@ -3,45 +3,518 @@
 <head>
   <meta charset="UTF-8" />
   <title>Voice Risk Profiler</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .main-content {
+      padding: 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      border-left: 5px solid;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: inherit;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .upload-card { border-left-color: #e74c3c; }
+    .record-card { border-left-color: #3498db; }
+    .files-card { border-left-color: #f39c12; }
+
+    .upload-card::before { background: #e74c3c; }
+    .record-card::before { background: #3498db; }
+    .files-card::before { background: #f39c12; }
+
+    .card h2 {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f8f9fa;
+      font-size: 1.4em;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      font-size: 18px;
+      color: white;
+    }
+
+    .upload-card .card-icon { background: #e74c3c; }
+    .record-card .card-icon { background: #3498db; }
+    .files-card .card-icon { background: #f39c12; }
+
+    input[type="text"], input[type="file"], select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      transition: all 0.3s ease;
+      margin-bottom: 15px;
+    }
+
+    input[type="text"]:focus, select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    button {
+      padding: 12px 25px;
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+    }
+
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    #startBtn {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+    }
+
+    #startBtn:hover {
+      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+    }
+
+    #stopBtn {
+      background: linear-gradient(135deg, #dc3545, #c82333);
+    }
+
+    #stopBtn:hover:not(:disabled) {
+      box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+    }
+
+    #extractBtn {
+      background: linear-gradient(135deg, #fd7e14, #e55a00);
+    }
+
+    #extractBtn:hover {
+      box-shadow: 0 8px 25px rgba(253, 126, 20, 0.3);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    audio {
+      width: 100%;
+      margin: 15px 0;
+      border-radius: 8px;
+    }
+
+    .success {
+      color: #28a745;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .error {
+      color: #dc3545;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    #featuresOutput {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 15px;
+      white-space: pre-wrap;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
+
+    .features-dashboard {
+      display: none;
+      grid-column: 1 / -1;
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border-left: 5px solid #1abc9c;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .features-dashboard::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #1abc9c;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .feature-card {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      border-left: 4px solid;
+    }
+
+    .feature-card.loudness { border-left-color: #e74c3c; }
+    .feature-card.pitch { border-left-color: #3498db; }
+    .feature-card.rhythm { border-left-color: #f39c12; }
+    .feature-card.spectral { border-left-color: #9b59b6; }
+    .feature-card.summary { border-left-color: #1abc9c; }
+    .feature-card.voice-quality { border-left-color: #34495e; }
+
+    .feature-card h4 {
+      color: #2c3e50;
+      margin-bottom: 15px;
+      font-size: 1.1em;
+      display: flex;
+      align-items: center;
+    }
+
+    .feature-card h4::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .feature-card.loudness h4::before { background: #e74c3c; }
+    .feature-card.pitch h4::before { background: #3498db; }
+    .feature-card.rhythm h4::before { background: #f39c12; }
+    .feature-card.spectral h4::before { background: #9b59b6; }
+    .feature-card.summary h4::before { background: #1abc9c; }
+    .feature-card.voice-quality h4::before { background: #34495e; }
+
+    .feature-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .feature-table td {
+      padding: 8px 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .feature-name {
+      font-weight: 600;
+      color: #495057;
+      width: 60%;
+    }
+
+    .feature-value {
+      font-family: 'Courier New', monospace;
+      font-weight: 500;
+      color: #28a745;
+      text-align: right;
+      font-size: 0.9em;
+    }
+
+    .audio-info {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+    }
+
+    .duration {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .health-score {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .score-excellent { background: #d4edda; color: #155724; }
+    .score-good { background: #d1ecf1; color: #0c5460; }
+    .score-fair { background: #fff3cd; color: #856404; }
+    .score-poor { background: #f8d7da; color: #721c24; }
+
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .buttons {
+        flex-direction: column;
+      }
+      
+      button {
+        margin-right: 0;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>🎙️ Voice Risk Profiler</h1>
+    <div class="header">
+      <h1>🎙️ Voice Risk Profiler</h1>
+      <p>Advanced Voice Analysis & Risk Assessment Platform</p>
+    </div>
 
-    <section class="card">
-      <h2>Upload Your Voice</h2>
-      <form id="uploadForm" enctype="multipart/form-data">
-        <input type="text" id="uploadFilenameInput" placeholder="Enter file name (without extension)" required style="margin-bottom: 10px; padding: 5px; width: 200px;" />
-        <input type="file" id="voiceFile" name="voice" accept="audio/*" required />
-        <button type="submit">Upload</button>
-        <p id="uploadStatusMessage" class="success"></p>
-        <p id="uploadErrorMessage" class="error"></p>
-      </form>
-    </section>
+    <div class="main-content">
+      <section class="card upload-card">
+        <h2><div class="card-icon">📁</div>Upload Your Voice</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+          <input type="text" id="uploadFilenameInput" placeholder="Enter file name (without extension)" required />
+          <input type="file" id="voiceFile" name="voice" accept="audio/*" required />
+          <button type="submit">Upload</button>
+          <p id="uploadStatusMessage" class="success"></p>
+          <p id="uploadErrorMessage" class="error"></p>
+        </form>
+      </section>
 
-    <section class="card">
-      <h2>Or Record Live</h2>
-      <input type="text" id="recordFilenameInput" placeholder="Enter file name (without extension)" required style="margin-bottom: 10px; padding: 5px; width: 200px;" />
-      <div class="buttons">
-        <button id="startBtn">🎤 Start Recording</button>
-        <button id="stopBtn" disabled>⏹️ Stop & Upload</button>
+      <section class="card record-card">
+        <h2><div class="card-icon">🎤</div>Or Record Live</h2>
+        <input type="text" id="recordFilenameInput" placeholder="Enter file name (without extension)" required />
+        <div class="buttons">
+          <button id="startBtn">🎤 Start Recording</button>
+          <button id="stopBtn" disabled>⏹️ Stop & Upload</button>
+        </div>
+        <audio id="player" controls></audio>
+        <p id="recordStatusMessage" class="success"></p>
+        <p id="recordErrorMessage" class="error"></p>
+      </section>
+
+      <section class="card files-card">
+        <h2><div class="card-icon">📊</div>Available Files</h2>
+        <select id="fileSelect"></select>
+        <button id="extractBtn">Extract Features</button>
+
+        <h3>Extracted Features</h3>
+        <pre id="featuresOutput"></pre>
+      </section>
+
+      <div class="features-dashboard" id="featuresDashboard">
+        <h2 style="color: #2c3e50; text-align: center; margin-bottom: 20px;">
+          <div class="card-icon" style="background: #1abc9c; display: inline-flex; margin-right: 10px;">📈</div>
+          Feature Analysis Dashboard
+        </h2>
+        <div id="dashboardContent">
+          <!-- Dashboard content will be populated here by your script.js -->
+        </div>
       </div>
-      <audio id="player" controls></audio>
-      <p id="recordStatusMessage" class="success"></p>
-      <p id="recordErrorMessage" class="error"></p>
-    </section>
-
-    <section class="card">
-      <h2>Available Files</h2>
-      <select id="fileSelect"></select>
-      <button id="extractBtn">Extract Features</button>
-
-      <h3>Extracted Features</h3>
-      <pre id="featuresOutput"></pre>
-    </section>
+    </div>
   </div>
 
+  <script>
+    // Add this function to your script.js to show the dashboard
+    function showFeaturesDashboard(features) {
+      const dashboard = document.getElementById('featuresDashboard');
+      const content = document.getElementById('dashboardContent');
+      
+      if (!features.summary || !features.summary.overall_voice_health_score) {
+        console.error('Invalid features data');
+        return;
+      }
+      
+      const healthScore = features.summary.overall_voice_health_score;
+      const duration = features.summary.audio_duration_seconds;
+      
+      let scoreClass = 'score-poor';
+      if (healthScore > 0.8) scoreClass = 'score-excellent';
+      else if (healthScore > 0.6) scoreClass = 'score-good';
+      else if (healthScore > 0.3) scoreClass = 'score-fair';
+
+      content.innerHTML = `
+        <div class="audio-info">
+          <div class="duration">${duration}s</div>
+          <div>Audio Duration</div>
+          <div class="health-score ${scoreClass}">Voice Health: ${healthScore.toFixed(3)}</div>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card loudness">
+            <h4>🔊 Loudness Analysis</h4>
+            <table class="feature-table">
+              <tr><td class="feature-name">Average Loudness (dB)</td><td class="feature-value">${features.loudness.average_loudness_db.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Dynamic Range (dB)</td><td class="feature-value">${features.loudness.dynamic_range_db.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Loudness Variation</td><td class="feature-value">${features.loudness.loudness_variation.toFixed(3)}</td></tr>
+              <tr><td class="feature-name">Spectral Brightness</td><td class="feature-value">${features.loudness.spectral_brightness.toFixed(2)}</td></tr>
+            </table>
+          </div>
+
+          <div class="feature-card pitch">
+            <h4>🎼 Pitch Features</h4>
+            <table class="feature-table">
+              <tr><td class="feature-name">Average Pitch (Hz)</td><td class="feature-value">${features.pitch.average_pitch_hz.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Pitch Range (Hz)</td><td class="feature-value">${features.pitch.pitch_range_hz.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Pitch Stability</td><td class="feature-value">${features.pitch.pitch_stability.toFixed(3)}</td></tr>
+              <tr><td class="feature-name">Voiced Percentage</td><td class="feature-value">${features.pitch.voiced_percentage.toFixed(2)}%</td></tr>
+            </table>
+          </div>
+
+          <div class="feature-card rhythm">
+            <h4>🥁 Rhythm & Tempo</h4>
+            <table class="feature-table">
+              <tr><td class="feature-name">Estimated Tempo (BPM)</td><td class="feature-value">${features.rhythm.estimated_tempo_bpm.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Rhythm Regularity</td><td class="feature-value">${features.rhythm.rhythm_regularity.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Speech Rate (syll/sec)</td><td class="feature-value">${features.rhythm.speech_rate_syllables_per_sec.toFixed(2)}</td></tr>
+            </table>
+          </div>
+
+          <div class="feature-card spectral">
+            <h4>📊 Spectral Analysis</h4>
+            <table class="feature-table">
+              <tr><td class="feature-name">Formant Concentration</td><td class="feature-value">${features.spectral.formant_concentration.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Frequency Range (Hz)</td><td class="feature-value">${features.spectral.frequency_range_hz.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Nasal Quality</td><td class="feature-value">${features.spectral.nasal_quality.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Spectral Balance</td><td class="feature-value">${features.spectral.spectral_balance.toFixed(2)}</td></tr>
+            </table>
+          </div>
+
+          <div class="feature-card summary">
+            <h4>📋 Summary Metrics</h4>
+            <table class="feature-table">
+              <tr><td class="feature-name">Sample Rate (Hz)</td><td class="feature-value">${features.summary.sample_rate_hz}</td></tr>
+              <tr><td class="feature-name">Speech Clarity Score</td><td class="feature-value">${features.summary.speech_clarity_score.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Overall Voice Health</td><td class="feature-value">${features.summary.overall_voice_health_score.toFixed(4)}</td></tr>
+            </table>
+          </div>
+
+          <div class="feature-card voice-quality">
+            <h4>🎤 Voice Quality</h4>
+            <table class="feature-table">
+              <tr><td class="feature-name">Breathiness Index</td><td class="feature-value">${features.voice_quality.breathiness_index.toFixed(3)}</td></tr>
+              <tr><td class="feature-name">Harmonics to Noise Ratio</td><td class="feature-value">${features.voice_quality.harmonics_to_noise_ratio.toFixed(2)}</td></tr>
+              <tr><td class="feature-name">Jitter Percentage</td><td class="feature-value">${features.voice_quality.jitter_percentage.toFixed(2)}%</td></tr>
+              <tr><td class="feature-name">Roughness Index</td><td class="feature-value">${features.voice_quality.roughness_index.toFixed(3)}</td></tr>
+              <tr><td class="feature-name">Shimmer Percentage</td><td class="feature-value">${features.voice_quality.shimmer_percentage.toFixed(2)}%</td></tr>
+              <tr><td class="feature-name">Voice Breaks Percentage</td><td class="feature-value">${features.voice_quality.voice_breaks_percentage.toFixed(2)}%</td></tr>
+            </table>
+          </div>
+        </div>
+      `;
+
+      dashboard.style.display = 'block';
+      
+      // Smooth scroll to dashboard
+      setTimeout(() => {
+        dashboard.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  </script>
   <script src="script.js"></script>
 </body>
 </html>

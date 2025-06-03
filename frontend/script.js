@@ -45,24 +45,55 @@ async function fetchFiles() {
 }
 
 // Extract features
+// async function extractFeatures() {
+//   const selectedFile = fileSelect.value;
+//   if (!selectedFile) return;
+
+//   try {
+//     const res = await fetch(`http://localhost:5000/extract_features/${selectedFile}`);
+//     const data = await res.json();
+
+//     if (res.ok) {
+//       featuresOutput.textContent = JSON.stringify(data.features, null, 2);
+//     } else {
+//       featuresOutput.textContent = "Error: " + JSON.stringify(data);
+//     }
+//   } catch (err) {
+//     featuresOutput.textContent = "Failed to extract features: " + err.message;
+//   }
+// }
+// Extract features
 async function extractFeatures() {
   const selectedFile = fileSelect.value;
-  if (!selectedFile) return;
+  if (!selectedFile) {
+    featuresOutput.textContent = "Please select a file first.";
+    return;
+  }
+
+  featuresOutput.textContent = "Extracting features...";
 
   try {
     const res = await fetch(`http://localhost:5000/extract_features/${selectedFile}`);
-    const data = await res.json();
-
-    if (res.ok) {
-      featuresOutput.textContent = JSON.stringify(data.features, null, 2);
+    
+    // Check if response is actually JSON
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const data = await res.json();
+      
+      if (res.ok) {
+        featuresOutput.textContent = JSON.stringify(data.features, null, 2);
+      } else {
+        featuresOutput.textContent = "Error: " + (data.error || JSON.stringify(data));
+      }
     } else {
-      featuresOutput.textContent = "Error: " + JSON.stringify(data);
+      // Server returned HTML error page or plain text
+      const errorText = await res.text();
+      featuresOutput.textContent = `Server Error (${res.status}): ${errorText.substring(0, 500)}...`;
     }
   } catch (err) {
     featuresOutput.textContent = "Failed to extract features: " + err.message;
   }
 }
-
 // Handle file upload
 uploadForm.addEventListener("submit", async (e) => {
   e.preventDefault();
