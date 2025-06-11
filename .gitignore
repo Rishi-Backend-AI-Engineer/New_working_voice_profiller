@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+
+# VS Code
+.vscode/
+
+# Mac stuff
+.DS_Store
+
+# Docker volumes/cache
+/tmp/
+numba-cache/
+uploads/
+mongo-data/
+
+# Node stuff (if you ever add frontend libs)
+node_modules/
+
+# Logs
+*.log
