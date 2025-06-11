@@ -2,3 +2,11 @@ flask
 flask_pymongo
 flask_cors
 python-dotenv
+librosa
+uvicorn[standard]
+pydantic
+fastapi
+pydub
+flask-cors
+gunicorn
+requests

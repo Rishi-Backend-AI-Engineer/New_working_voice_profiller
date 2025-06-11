@@ -17,7 +17,10 @@ const recordFilenameInput = document.getElementById("recordFilenameInput");
 const fileSelect = document.getElementById("fileSelect");
 const featuresOutput = document.getElementById("featuresOutput");
 
-let mediaRecorder, audioChunks;
+let mediaRecorder;
+let audioChunks = [];
+
+const BASE_URL = "http://localhost:5000";
 
 function clearMessages() {
   uploadStatusMessage.textContent = "";
@@ -29,10 +32,19 @@ function clearMessages() {
 // Populate file dropdown
 async function fetchFiles() {
   try {
-    const res = await fetch("http://localhost:5000/list_files");
+    const res = await fetch(`${BASE_URL}/list_files`);
+    if (!res.ok) throw new Error(`Status ${res.status}`);
     const files = await res.json();
 
     fileSelect.innerHTML = "";
+    if (files.length === 0) {
+      const option = document.createElement("option");
+      option.textContent = "No files found";
+      option.disabled = true;
+      fileSelect.appendChild(option);
+      return;
+    }
+
     files.forEach((filename) => {
       const option = document.createElement("option");
       option.value = filename;
@@ -41,52 +53,33 @@ async function fetchFiles() {
     });
   } catch (err) {
     console.error("Error fetching files:", err);
+    fileSelect.innerHTML = "<option disabled>Error loading files</option>";
   }
 }
 
-// Extract features
-// async function extractFeatures() {
-//   const selectedFile = fileSelect.value;
-//   if (!selectedFile) return;
-
-//   try {
-//     const res = await fetch(`http://localhost:5000/extract_features/${selectedFile}`);
-//     const data = await res.json();
-
-//     if (res.ok) {
-//       featuresOutput.textContent = JSON.stringify(data.features, null, 2);
-//     } else {
-//       featuresOutput.textContent = "Error: " + JSON.stringify(data);
-//     }
-//   } catch (err) {
-//     featuresOutput.textContent = "Failed to extract features: " + err.message;
-//   }
-// }
-// Extract features
+// Extract features for selected file
 async function extractFeatures() {
   const selectedFile = fileSelect.value;
-  if (!selectedFile) {
-    featuresOutput.textContent = "Please select a file first.";
+  if (!selectedFile || selectedFile === "No files found") {
+    featuresOutput.textContent = "Please select a valid file first.";
     return;
   }
 
   featuresOutput.textContent = "Extracting features...";
 
   try {
-    const res = await fetch(`http://localhost:5000/extract_features/${selectedFile}`);
-    
-    // Check if response is actually JSON
+    const res = await fetch(`${BASE_URL}/extract_features/${encodeURIComponent(selectedFile)}`);
+
     const contentType = res.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       const data = await res.json();
-      
+
       if (res.ok) {
         featuresOutput.textContent = JSON.stringify(data.features, null, 2);
       } else {
         featuresOutput.textContent = "Error: " + (data.error || JSON.stringify(data));
       }
     } else {
-      // Server returned HTML error page or plain text
       const errorText = await res.text();
       featuresOutput.textContent = `Server Error (${res.status}): ${errorText.substring(0, 500)}...`;
     }
@@ -94,6 +87,7 @@ async function extractFeatures() {
     featuresOutput.textContent = "Failed to extract features: " + err.message;
   }
 }
+
 // Handle file upload
 uploadForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -117,7 +111,7 @@ uploadForm.addEventListener("submit", async (e) => {
   formData.append("custom_filename", filename + ".wav");
 
   try {
-    const res = await fetch("http://localhost:5000/upload", {
+    const res = await fetch(`${BASE_URL}/upload`, {
       method: "POST",
       body: formData,
     });
@@ -125,7 +119,7 @@ uploadForm.addEventListener("submit", async (e) => {
     const result = await res.text();
     if (res.ok) {
       uploadStatusMessage.textContent = "Voice uploaded successfully!";
-      fetchFiles(); // refresh file list
+      await fetchFiles(); // refresh file list
     } else {
       uploadErrorMessage.textContent = "Upload failed: " + result;
     }
@@ -134,9 +128,14 @@ uploadForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Start recording
+// Start recording audio
 startBtn.onclick = async () => {
   clearMessages();
+
+  if (!recordFilenameInput.value.trim()) {
+    recordErrorMessage.textContent = "Please enter a filename before recording.";
+    return;
+  }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -144,23 +143,24 @@ startBtn.onclick = async () => {
     audioChunks = [];
 
     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+
     mediaRecorder.onstop = async () => {
       const filename = recordFilenameInput.value.trim();
-
       if (!filename) {
-        recordErrorMessage.textContent = "Please enter a filename before recording.";
+        recordErrorMessage.textContent = "Filename lost. Please enter it again.";
         return;
       }
 
-      const blob = new Blob(audioChunks, { type: "audio/wav" });
+      // Create a Blob from the recorded audio chunks
+      const blob = new Blob(audioChunks, { type: "audio/webm" });
       player.src = URL.createObjectURL(blob);
 
       const formData = new FormData();
-      formData.append("voice", blob, filename + ".wav");
+      formData.append("voice", blob, filename + ".wav"); // Hacky: sending webm as wav for backend
       formData.append("custom_filename", filename + ".wav");
 
       try {
-        const res = await fetch("http://localhost:5000/upload", {
+        const res = await fetch(`${BASE_URL}/upload`, {
           method: "POST",
           body: formData,
         });
@@ -168,7 +168,7 @@ startBtn.onclick = async () => {
         const result = await res.text();
         if (res.ok) {
           recordStatusMessage.textContent = "Recording uploaded successfully!";
-          fetchFiles(); // refresh file list
+          await fetchFiles(); // refresh file list
         } else {
           recordErrorMessage.textContent = "Upload failed: " + result;
         }
@@ -185,7 +185,7 @@ startBtn.onclick = async () => {
   }
 };
 
-// Stop recording
+// Stop recording audio
 stopBtn.onclick = () => {
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.stop();
@@ -194,7 +194,40 @@ stopBtn.onclick = () => {
   }
 };
 
-// On load
-fetchFiles();
+// Initialize
 window.onload = fetchFiles;
 document.getElementById("extractBtn").onclick = extractFeatures;
+
+// ✅ NEW: Risk Profiling Logic
+const riskForm = document.getElementById("riskForm");
+const riskResult = document.getElementById("riskResult");
+
+riskForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(riskForm);
+  const riskData = {};
+
+  for (let [key, value] of formData.entries()) {
+    if (key.includes("_intensity")) continue;
+    const intensity = parseFloat(formData.get(`${key}_intensity`) || 0.5);
+    riskData[key] = { emotion: value, intensity };
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}/calculate_risk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(riskData),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      riskResult.textContent = `✅ Risk Score: ${data.risk_score} (${data.risk_category})`;
+    } else {
+      riskResult.textContent = `❌ Error: ${data.error || "Unknown error"}`;
+    }
+  } catch (err) {
+    riskResult.textContent = `❌ Failed to submit: ${err.message}`;
+  }
+});
