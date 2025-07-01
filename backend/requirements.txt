@@ -1,12 +1,45 @@
-flask
-flask_pymongo
-flask_cors
-python-dotenv
-librosa
-uvicorn[standard]
-pydantic
-fastapi
-pydub
-flask-cors
-gunicorn
-requests
+# --- Core Framework ---
+flask==2.3.3
+flask-cors==4.0.0
+gunicorn==21.2.0
+
+# --- Environment Config ---
+python-dotenv==1.0.0
+
+# --- Database ---
+pymongo==4.5.0
+
+# --- Audio Processing ---
+librosa==0.10.1
+pydub==0.25.1
+soundfile==0.12.1
+audioread==3.0.0
+
+# --- ML + NLP ---
+nltk==3.8.1
+scikit-learn==1.3.0
+numpy==1.24.3
+scipy==1.11.3
+textblob==0.17.1
+
+# --- PDF & Reporting ---
+reportlab==4.0.4
+fpdf==1.7.2
+
+# --- Requests ---
+requests==2.31.0
+
+# --- Transformers & Emotion Model ---
+transformers==4.35.0
+sentencepiece==0.1.99
+protobuf==4.25.1
+safetensors==0.4.2
+
+# --- Whisper Transcription (single speaker) ---
+faster-whisper==0.10.0
+
+# --- PyTorch CPU (compatible with Wav2Vec2, not PyAnnote) ---
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==1.10.0+cpu
+torchaudio==0.10.0+cpu
+psutil==5.9.5

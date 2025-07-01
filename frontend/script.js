@@ -198,36 +198,54 @@ stopBtn.onclick = () => {
 window.onload = fetchFiles;
 document.getElementById("extractBtn").onclick = extractFeatures;
 
-// ✅ NEW: Risk Profiling Logic
-const riskForm = document.getElementById("riskForm");
-const riskResult = document.getElementById("riskResult");
+// 🎯 Analyze Session
+const analyzeBtn = document.getElementById("analyzeBtn");
+const reportBtn = document.getElementById("reportBtn");
+const analyzeStatus = document.getElementById("analyzeStatus");
+const reportStatus = document.getElementById("reportStatus");
 
-riskForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const formData = new FormData(riskForm);
-  const riskData = {};
-
-  for (let [key, value] of formData.entries()) {
-    if (key.includes("_intensity")) continue;
-    const intensity = parseFloat(formData.get(`${key}_intensity`) || 0.5);
-    riskData[key] = { emotion: value, intensity };
+analyzeBtn.onclick = async () => {
+  const filename = fileSelect.value;
+  if (!filename) {
+    analyzeStatus.textContent = "Please select a file to analyze.";
+    return;
   }
-
+  analyzeStatus.textContent = "Analyzing...";
   try {
-    const res = await fetch(`${BASE_URL}/calculate_risk`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(riskData),
-    });
-
+    const res = await fetch(`${BASE_URL}/analyze/${filename}`);
     const data = await res.json();
     if (res.ok) {
-      riskResult.textContent = `✅ Risk Score: ${data.risk_score} (${data.risk_category})`;
+      analyzeStatus.textContent = "✅ Session analyzed successfully!";
+      console.log("📊 Full session object:", data.result);
+      featuresOutput.textContent = JSON.stringify(data.result, null, 2);
     } else {
-      riskResult.textContent = `❌ Error: ${data.error || "Unknown error"}`;
+      analyzeStatus.textContent = "❌ " + (data.error || "Analysis failed.");
     }
   } catch (err) {
-    riskResult.textContent = `❌ Failed to submit: ${err.message}`;
+    analyzeStatus.textContent = "❌ Failed: " + err.message;
   }
-});
+};
+
+// 📄 Generate Report
+reportBtn.onclick = async () => {
+  const filename = fileSelect.value;
+  if (!filename) {
+    reportStatus.textContent = "Please select a file.";
+    return;
+  }
+  reportStatus.textContent = "Generating PDF...";
+  try {
+    const res = await fetch(`${BASE_URL}/generate_report/${filename}`);
+    if (!res.ok) throw new Error("Server error");
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${filename}_report.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    reportStatus.textContent = "✅ PDF downloaded!";
+  } catch (err) {
+    reportStatus.textContent = "❌ " + err.message;
+  }
+};

@@ -1,15 +1,39 @@
-# backend/Dockerfile
-
+# Use a slim Python base image
 FROM python:3.9-slim
-
-RUN apt-get update && apt-get install -y ffmpeg
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libsndfile1 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir \
+    --find-links https://download.pytorch.org/whl/cpu/torch_stable.html \
+    -r requirements.txt
 
-RUN pip install -r requirements.txt
+COPY . .
 
-COPY . /app
+RUN python -c "\
+from transformers import Wav2Vec2ForSequenceClassification, Wav2Vec2FeatureExtractor; \
+model = Wav2Vec2ForSequenceClassification.from_pretrained('ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition'); \
+model.save_pretrained('./models/emotion'); \
+extractor = Wav2Vec2FeatureExtractor.from_pretrained('ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition'); \
+extractor.save_pretrained('./models/emotion')"
 
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5000", "--timeout", "120", "app:app"]
+RUN mkdir -p uploads /tmp/numba_cache
+
+RUN python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
+
+ENV PYTHONUNBUFFERED=1
+ENV NUMBA_CACHE_DIR=/tmp/numba_cache
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+ENV TOKENIZERS_PARALLELISM=false
+
+EXPOSE 5000
+
+CMD ["gunicorn", "--workers=1", "--bind=0.0.0.0:5000", "--timeout=600", "--max-requests=10", "--max-requests-jitter=2", "app:app"]

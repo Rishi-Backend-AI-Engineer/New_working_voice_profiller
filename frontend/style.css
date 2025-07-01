@@ -74,3 +74,15 @@ audio {
 .buttons {
   margin-top: 10px;
 }
+
+.session-card .card-icon {
+  background: #6c5ce7;
+}
+
+#analyzeBtn {
+  background: linear-gradient(135deg, #6c5ce7, #341f97);
+}
+
+#reportBtn {
+  background: linear-gradient(135deg, #00cec9, #0984e3);
+}
