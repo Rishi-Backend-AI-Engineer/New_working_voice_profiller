@@ -20,7 +20,7 @@ const featuresOutput = document.getElementById("featuresOutput");
 let mediaRecorder;
 let audioChunks = [];
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "http://localhost:5001";
 
 function clearMessages() {
   uploadStatusMessage.textContent = "";

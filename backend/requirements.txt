@@ -40,6 +40,5 @@ faster-whisper==0.10.0
 
 # --- PyTorch CPU (compatible with Wav2Vec2, not PyAnnote) ---
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==1.10.0+cpu
-torchaudio==0.10.0+cpu
+
 psutil==5.9.5
