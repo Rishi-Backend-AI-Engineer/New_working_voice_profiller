@@ -5,8 +5,9 @@ services:
     build:
       context: ./backend
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
+      - ./backend/services/diarization.py:/app/services/diarization.py
       - ./backend/uploads:/app/uploads
       - ./numba-cache:/tmp/numba_cache
     env_file:

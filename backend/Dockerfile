@@ -7,13 +7,16 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     ffmpeg \
     libsndfile1 \
+    gcc \
+    python3-dev \
+    build-essential \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir \
-    --find-links https://download.pytorch.org/whl/cpu/torch_stable.html \
-    -r requirements.txt
+RUN pip install --no-cache-dir torch==1.10.0 torchaudio==0.10.0 -f https://download.pytorch.org/whl/cpu/torch_stable.html
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
