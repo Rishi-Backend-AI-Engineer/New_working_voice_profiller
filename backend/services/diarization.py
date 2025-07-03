@@ -46,7 +46,7 @@ def audio_separation(input_path: str) -> str:
     # Load original audio
     audio = AudioSegment.from_wav(input_path)
     first_speaker_label = labels[0]  # label of the first speaking segment
-
+    first_speaker_label=1-first_speaker_label
     # Create an empty audio segment for that speaker
     first_speaker_audio = AudioSegment.empty()
 
