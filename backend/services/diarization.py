@@ -48,7 +48,7 @@ def audio_separation(input_path: str) -> str:
     speaker_1 = AudioSegment.empty()
 
     for seg, label in zip(segments, labels):
-        if label == 1:  # Only keep speaker 0 for this example
+        if label == 1:  # Only keep speaker 1 for this example
             start_ms = int(seg.start * 1000)
             end_ms = int(seg.end * 1000)
             speaker_1 += audio[start_ms:end_ms]

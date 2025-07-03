@@ -142,16 +142,17 @@ def analyze_session(filename):
     try:
         diarized_path = audio_separation(temp.name)  # Returns path to diarized .wav
 
+        audio_path = diarized_path 
         # 🔊 Extract audio features
-        y, sr = librosa.load(diarized_path, sr=None, duration=None)
+        y, sr = librosa.load(audio_path, sr=None, duration=None)
         audio_data = {"audio": y, "sample_rate": sr}
         audio_features = extract_audio_features(audio_data)
 
         # 🎭 Emotion detection on full audio
-        voice_emotion = detect_emotion(temp.name)
+        voice_emotion = detect_emotion(audio_path)
 
         # 🧠 Transcription + NLP on full audio
-        with open(temp.name, "rb") as f:
+        with open(audio_path, "rb") as f:
             audio_bytes = f.read()
         transcript_result = transcribe_audio(audio_bytes)
         nlp_result = analyze_text_features(transcript_result["transcript"])
