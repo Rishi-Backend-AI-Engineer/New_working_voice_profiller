@@ -222,6 +222,7 @@ def analyze_session(filename):
 
     finally:
         os.remove(temp.name)
+        os.remove(diarized_path)
 
 
 # === Generate PDF Report ===

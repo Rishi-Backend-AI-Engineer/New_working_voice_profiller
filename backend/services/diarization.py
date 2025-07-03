@@ -45,16 +45,23 @@ def audio_separation(input_path: str) -> str:
 
     # Load original audio
     audio = AudioSegment.from_wav(input_path)
-    speaker_0 = AudioSegment.empty()
+    first_speaker_label = labels[0]  # label of the first speaking segment
 
+    # Create an empty audio segment for that speaker
+    first_speaker_audio = AudioSegment.empty()
+
+    # Collect all segments spoken by the first speaker
     for seg, label in zip(segments, labels):
-        if label == 0:  # Only keep speaker 0 for this example
+        if label == first_speaker_label:
             start_ms = int(seg.start * 1000)
             end_ms = int(seg.end * 1000)
-            speaker_0 += audio[start_ms:end_ms]
+            first_speaker_audio += audio[start_ms:end_ms]
 
-    # Save speaker 0 audio as diarized output
+    # Save to a temp file
     output_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    speaker_0.export(output_temp.name, format="wav")
+    first_speaker_audio.export(output_temp.name, format="wav")
 
+    # Return path to output file
     return output_temp.name
+
+    
